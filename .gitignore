@@ -1,0 +1,7 @@
+.idea
+/vendor/*
+/logs/*
+/.data/*
+composer.lock
+.env
+.docker-compose.yml.swp

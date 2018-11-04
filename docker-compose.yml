@@ -1,0 +1,55 @@
+version: '2'
+
+services:
+    php:
+        container_name: container_php
+        build:
+            context: docker/php7-fpm
+            args:
+                TIMEZONE: ${TIMEZONE}
+        volumes:
+            - ${SYMFONY_APP_PATH}:/var/www/symfony
+            - ./logs/symfony:/var/www/symfony/var/log
+    nginx:
+        container_name: container_nginx
+        build:
+            context: docker/nginx
+            args:
+                MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
+                SERVER_NAME: ${SERVER_NAME}
+        ports:
+            - "8080:80"
+        volumes_from:
+            - php
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+    mysql:
+        container_name: container_mysql
+        image: mysql
+        volumes:
+            - "./.data/mysql:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - "3366:3306"
+    rabbit:
+        container_name: container_rabbit
+        hostname: rabbit
+        build:
+            context: docker/rabbitmq
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+#           This currently not working with docker-compose when exposing /var/log/rabbitmq as volume (permission denied)
+#            RABBITMQ_LOG_BASE: /var/log/rabbitmq/log
+#            RABBITMQ_LOGS: ~
+#            RABBITMQ_SASL_LOGS: ~
+        volumes:
+            - ./.data/rabbitmq/:/var/lib/rabbitmq
+#            - ./logs/rabbitmq/:/var/log/rabbitmq
+        ports:
+            - "5672:5672"
+            - "15672:15672"

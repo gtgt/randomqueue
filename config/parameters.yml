@@ -1,0 +1,4 @@
+parameters:
+    dir.vendor: 'vendor'
+    rabbitmq.channel: 'randomnumber'
+    email.admin: 'gt@kani.hu'

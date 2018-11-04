@@ -1,0 +1,32 @@
+#!/usr/bin/env php
+<?php
+require __DIR__.'/../vendor/autoload.php';
+
+/**
+ * @param $severity
+ * @param $message
+ * @param $file
+ * @param $line
+ *
+ * @throws ErrorException
+ */
+function exception_error_handler($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        // This error code is not included in error_reporting
+        return;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+}
+set_error_handler('exception_error_handler');
+
+$container = new \RandomQueue\RandomQueueContainer();
+$container->setAlias(\Psr\Log\LoggerInterface::class, 'console.logger');
+$container->compile();
+
+$application = $container->get(\Symfony\Component\Console\Application::class);
+/** @noinspection MissingService Added by AddConsoleCommandPass */
+$commandLoader = $container->get('console.command_loader');
+foreach ($commandLoader->getNames() as $alias) {
+  $application->add($commandLoader->get($alias));
+}
+$application->run();

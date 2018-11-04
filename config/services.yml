@@ -1,0 +1,67 @@
+imports:
+    - { resource: "parameters.yml" }
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    Symfony\Component\Console\Application:
+        public: true
+
+    Symfony\Component\Console\Output\ConsoleOutput: ~
+
+    console.logger:
+        class: Symfony\Component\Console\Logger\ConsoleLogger
+        arguments:
+            $output: '@Symfony\Component\Console\Output\ConsoleOutput'
+
+    PhpAmqpLib\Connection\AbstractConnection: '@rabbitmq.connection'
+
+    rabbitmq.connection:
+        class: PhpAmqpLib\Connection\AMQPLazyConnection
+        arguments:
+            $host: '%env(SERVER_NAME)%'
+            $port: 5672
+            $user: '%env(RABBITMQ_USER)%'
+            $password: '%env(RABBITMQ_PASSWORD)%'
+
+    Symfony\Component\EventDispatcher\EventDispatcherInterface: '@event_dispatcher'
+
+    mail.transport:
+        class: Swift_SendmailTransport
+
+    mailer:
+        class: Swift_Mailer
+        arguments:
+            - '@mail.transport'
+
+    event_dispatcher:
+        class: Symfony\Component\EventDispatcher\EventDispatcher
+
+    RandomQueue\:
+        resource: '../src/*'
+
+    RandomQueue\Queue\Worker:
+        public: true
+        arguments:
+            $connection: '@rabbitmq.connection'
+            $channelName: '%rabbitmq.channel%'
+
+
+    RandomQueue\Command\QueueConsumerCommand:
+        tags:
+            - { name: 'console.command', command: 'queue:consumer' }
+
+
+    RandomQueue\Command\QueueJobAddCommand:
+        tags:
+            - { name: 'console.command', command: 'queue:job:add' }
+
+    RandomQueue\EventSubscriber\JobFailedSubscriber:
+        arguments:
+            $mailer: '@mailer'
+            $notifyEmail: '%email.admin%'
+        tags:
+            - { name: 'kernel.event_subscriber' }
