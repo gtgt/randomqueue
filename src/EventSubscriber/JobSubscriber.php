@@ -4,23 +4,22 @@
 namespace RandomQueue\EventSubscriber;
 
 
-use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use RandomQueue\Event\JobFailedEvent;
+use RandomQueue\Event\JobSuccessfulEvent;
 use RandomQueue\Queue\Worker;
 use RandomQueue\RandomQueueEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class JobFailedSubscriber implements EventSubscriberInterface {
+class JobSubscriber implements EventSubscriberInterface, LoggerAwareInterface {
+
+    use LoggerAwareTrait;
 
     /**
      * @var Worker
      */
     protected $worker;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
 
     /**
      * Swift mailer
@@ -39,14 +38,12 @@ class JobFailedSubscriber implements EventSubscriberInterface {
     /**
      * JobFailedSubscriber constructor.
      *
-     * @param Worker          $worker
-     * @param LoggerInterface $logger
-     * @param \Swift_Mailer   $mailer
-     * @param string          $notifyEmail
+     * @param Worker        $worker
+     * @param \Swift_Mailer $mailer
+     * @param string        $notifyEmail
      */
-    public function __construct(Worker $worker, LoggerInterface $logger, \Swift_Mailer $mailer, string $notifyEmail) {
+    public function __construct(Worker $worker, \Swift_Mailer $mailer, string $notifyEmail) {
         $this->worker = $worker;
-        $this->logger = $logger;
         $this->mailer = $mailer;
         $this->notifyEmail = $notifyEmail;
     }
@@ -72,12 +69,25 @@ class JobFailedSubscriber implements EventSubscriberInterface {
     public static function getSubscribedEvents() {
         // return the subscribed events, their methods and priorities
         return [
+            RandomQueueEvents::JOB_SUCCESSFUL => [
+                ['logSuccess', 0],
+            ],
             RandomQueueEvents::JOB_FAILED => [
                 ['processException', 10],
                 ['logException', 0],
                 ['notifyException', -10],
             ]
         ];
+    }
+
+    /**
+     * Log the successful job
+     *
+     * @param JobSuccessfulEvent $event
+     */
+    public function logSuccess(JobSuccessfulEvent $event): void {
+        $deliveryTag = $event->getMessage()->delivery_info['delivery_tag'];
+        $this->logger->info(sprintf('Job (%s) ran successfully after %d failed tries.', $deliveryTag, $event->getJob()->getFailCount()), ['deliveryTag' => $deliveryTag]);
     }
 
     /**
@@ -95,8 +105,9 @@ class JobFailedSubscriber implements EventSubscriberInterface {
      * @param JobFailedEvent $event
      */
     public function logException(JobFailedEvent $event): void {
+        $deliveryTag = $event->getMessage()->delivery_info['delivery_tag'];
         $jobFailedException = $event->getException();
-        $this->logger->warning(sprintf('Try %d: %s', $event->getJob()->getFailCount(), $jobFailedException->getMessage()), ['exception' => $jobFailedException]);
+        $this->logger->warning(sprintf('Try %d: %s', $event->getJob()->getFailCount(), $jobFailedException->getMessage()), ['deliveryTag' => $deliveryTag, 'exception' => $jobFailedException]);
     }
 
     /**
@@ -113,7 +124,7 @@ class JobFailedSubscriber implements EventSubscriberInterface {
                     ->setBody(sprintf('Job failed %d times!'.PHP_EOL.'d.tag: %d', $job->getFailCount(), $deliveryTag))
                 );
             } catch (\Swift_TransportException $e) {
-                $this->logger->error(sprintf('Mailer error: %s', $e->getMessage()), ['exception' => $e]);
+                $this->logger->error(sprintf('Mailer error: %s', $e->getMessage()), ['deliveryTag' => $deliveryTag, 'exception' => $e]);
             }
         }
     }

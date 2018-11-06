@@ -1,7 +1,8 @@
-FROM php:7.2-fpm
+FROM php:7.2-fpm-alpine
 ARG TIMEZONE
 
-RUN apt-get update && apt-get install -y git unzip openssl procps acl zlib1g-dev
+#RUN apt-get update && apt-get install -y git unzip openssl procps acl
+RUN apk add --no-cache $PHPIZE_DEPS openssl-dev procps bash
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -10,9 +11,12 @@ RUN composer --version
 # Set timezone
 RUN ln -snf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && echo ${TIMEZONE} > /etc/timezone
 RUN printf '[PHP]\ndate.timezone = "%s"\n', ${TIMEZONE} > /usr/local/etc/php/conf.d/tzone.ini
+RUN mkdir /var/log/php
+RUN chmod 777 /var/log/php
+RUN printf '[PHP]\nlog_errors = On\nerror_log = /var/log/php/error.log\n' > /usr/local/etc/php/conf.d/error_log.ini
 
 # Install extensions
-RUN docker-php-ext-install pdo pdo_mysql bcmath zip
+RUN docker-php-ext-install pdo_mysql bcmath
 
 # Install xdebug
 RUN pecl install xdebug
@@ -25,7 +29,4 @@ RUN echo "xdebug.remote_connect_back=1" >> /usr/local/etc/php/conf.d/docker-php-
 RUN echo "xdebug.idekey=\"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 RUN echo "xdebug.remote_port=9001" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
-# Create an alias for Symfony3 console
-RUN echo 'alias symfony="php bin/console"' >> ~/.bashrc
-
-WORKDIR /var/www/symfony
+WORKDIR /var/www

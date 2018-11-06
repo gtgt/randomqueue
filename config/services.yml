@@ -1,6 +1,3 @@
-imports:
-    - { resource: "parameters.yml" }
-
 services:
 
     ##
@@ -41,16 +38,21 @@ services:
 
     logger.db:
         class: RandomQueue\Log\DatabaseLogger
+        public: true
         arguments:
             $level: !php/const RandomQueue\Log\DatabaseLogger::DEBUG
 
     logger.console:
         class: Symfony\Component\Console\Logger\ConsoleLogger
+        public: true
         arguments:
             $output: '@Symfony\Component\Console\Output\ConsoleOutput'
 
     # default logger
-    Psr\Log\LoggerInterface: '@logger.db'
+    logger: '@logger.db'
+
+    # alias for autowiring
+    Psr\Log\LoggerInterface: '@logger'
 
 
     ##
@@ -62,10 +64,10 @@ services:
     rabbitmq.connection:
         class: PhpAmqpLib\Connection\AMQPLazyConnection
         arguments:
-            $host: '%env(SERVER_NAME)%'
-            $port: 5672
-            $user: '%env(RABBITMQ_USER)%'
-            $password: '%env(RABBITMQ_PASSWORD)%'
+            $host: '%rabbitmq.host%'
+            $port: '%rabbitmq.port%'
+            $user: '%rabbitmq.user%'
+            $password: '%rabbitmq.password%'
 
 
     ##
@@ -114,7 +116,7 @@ services:
         tags:
             - { name: 'console.command', command: 'queue:job:add' }
 
-    RandomQueue\EventSubscriber\JobFailedSubscriber:
+    RandomQueue\EventSubscriber\JobSubscriber:
         arguments:
             $mailer: '@mailer'
             $notifyEmail: '%email.admin%'

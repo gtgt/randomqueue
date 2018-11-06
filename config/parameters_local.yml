@@ -1,0 +1,4 @@
+# this env is used for local development (not in docker)
+parameters:
+    rabbitmq.host: 'localhost'
+    db.dsn: 'mysql:dbname=%env(MYSQL_DATABASE)%;host=127.0.0.1;port=3366'

@@ -4,6 +4,7 @@
 namespace RandomQueue\Job;
 
 
+use RandomQueue\Exception\InvalidJobArgumentException;
 use RandomQueue\Exception\JobFailedException;
 
 /**
@@ -23,8 +24,11 @@ class RandomNumberJob extends AbstractJob {
      *
      * @param int $theNumber
      */
-    public function __construct(int $theNumber) {
-        $this->theNumber = $theNumber;
+    public function __construct($theNumber) {
+        if (!is_numeric($theNumber)) {
+            throw new InvalidJobArgumentException(sprintf('Invalid %s argument: %s.', static::class, $theNumber));
+        }
+        $this->theNumber = (int)$theNumber;
     }
 
     /**
@@ -32,8 +36,9 @@ class RandomNumberJob extends AbstractJob {
      */
     public function doIt() {
         // 66% of jobs should fail. Reminder of division by 3 should do it :)
-        if ($this->theNumber % 3) {
-            throw new JobFailedException('Wrong number!');
+        $numberToTry = microtime(TRUE) * 10000 + $this->theNumber;
+        if ($numberToTry % 3) {
+            throw new JobFailedException(sprintf('Wrong number: %d!', $numberToTry));
         }
         return 42;
     }

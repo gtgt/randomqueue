@@ -17,6 +17,7 @@ script:
   - docker-compose build
   - docker-compose up -d
   - docker-compose ps
+  - docker-compose up unittest
 
 notifications:
   email:

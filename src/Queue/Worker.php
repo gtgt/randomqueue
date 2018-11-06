@@ -84,7 +84,7 @@ class Worker {
             } catch (\Exception $e) {
                 // always use JobFailedException
                 if (!$e instanceof JobFailedException) {
-                    $e = new JobFailedException(sprintf('Job (%s) failed!', \get_class($job)), 0, $e);
+                    $e = new JobFailedException(sprintf('Job (%s) failed: %d!', \get_class($job), $e->getMessage()), 0, $e);
                 }
                 $this->eventDispatcher->dispatch(RandomQueueEvents::JOB_FAILED, new JobFailedEvent($job, $message, $e));
             }

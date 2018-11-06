@@ -20,8 +20,6 @@ function exception_error_handler($severity, $message, $file, $line) {
 set_error_handler('exception_error_handler');
 
 $container = new \RandomQueue\RandomQueueContainer();
-//$container->setAlias(\Psr\Log\LoggerInterface::class, 'console.logger');
-$container->compile();
 
 $application = $container->get(\Symfony\Component\Console\Application::class);
 /** @noinspection MissingService Added by AddConsoleCommandPass */
@@ -29,4 +27,10 @@ $commandLoader = $container->get('console.command_loader');
 foreach ($commandLoader->getNames() as $alias) {
   $application->add($commandLoader->get($alias));
 }
-$application->run();
+$application->setCatchExceptions(FALSE);
+try {
+    $application->run();
+} catch (\Exception $e) {
+    $container->get('logger.console')->critical($e->getMessage(), ['exception' => $e]);
+    $container->get('logger.db')->critical($e->getMessage(), ['exception' => $e]);
+}

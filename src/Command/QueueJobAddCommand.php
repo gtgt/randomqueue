@@ -1,7 +1,8 @@
 <?php
 namespace RandomQueue\Command;
 
-use PhpAmqpLib\Connection\AbstractConnection;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use RandomQueue\Job\RandomNumberJob;
 use RandomQueue\Queue\Worker;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -10,7 +11,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class QueueJobAddCommand extends Command {
+class QueueJobAddCommand extends Command implements LoggerAwareInterface {
+
+    use LoggerAwareTrait;
 
     /**
      * @var Worker
@@ -31,7 +34,9 @@ class QueueJobAddCommand extends Command {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
-        $this->worker->addJob(new RandomNumberJob($input->getArgument('number')));
+        $theNumber = $input->getArgument('number');
+        $this->worker->addJob(new RandomNumberJob($theNumber));
+        $this->logger->info(sprintf('Added job with number: %d.', $theNumber));
         $this->worker->close();
     }
 }

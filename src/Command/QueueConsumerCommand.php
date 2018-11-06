@@ -1,14 +1,17 @@
 <?php
 namespace RandomQueue\Command;
 
-use PhpAmqpLib\Connection\AbstractConnection;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use RandomQueue\Queue\Worker;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class QueueConsumerCommand extends Command {
+class QueueConsumerCommand extends Command implements LoggerAwareInterface {
+
+    use LoggerAwareTrait;
 
     /**
      * @var Worker
@@ -28,6 +31,7 @@ class QueueConsumerCommand extends Command {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
+        $this->logger->info('Consumer started!');
         $this->worker->consume();
     }
 }

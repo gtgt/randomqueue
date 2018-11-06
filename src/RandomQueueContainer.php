@@ -4,6 +4,8 @@
 namespace RandomQueue;
 
 
+use RandomQueue\DependencyInjection\Compiler\LoggerAwarePass;
+use Symfony\Component\Config\Exception\FileLocatorFileNotFoundException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\DependencyInjection\AddConsoleCommandPass;
 use Symfony\Component\DependencyInjection\Compiler\ResolveEnvPlaceholdersPass;
@@ -27,9 +29,18 @@ class RandomQueueContainer extends ContainerBuilder {
         $dotenv->load(__DIR__.'/../.env');
 
         $loader = new YamlFileLoader($this, new FileLocator(__DIR__.'/../config'));
+        $loader->load('parameters.yml');
+        try {
+            $loader->load('parameters_'.getenv('APP_ENV').'.yml');
+        } catch (FileLocatorFileNotFoundException $e) {
+            // no problem with this
+        }
         $loader->load('services.yml');
+        $this->addCompilerPass(new LoggerAwarePass());
         $this->addCompilerPass(new AddConsoleCommandPass());
         $this->addCompilerPass(new ResolveEnvPlaceholdersPass());
         $this->addCompilerPass(new RegisterListenersPass());
+        $this->compile(TRUE);
+        // @TODO: maybe clear env here...
     }
 }

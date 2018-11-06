@@ -1,35 +1,66 @@
-version: '2'
+version: '3'
 
 services:
-    php:
-        container_name: container_php
+    prepare:
+        container_name: randomqueue-prepare
+        image: randomqueue_php7-cli
         build:
-            context: docker/php7-fpm
+            context: docker/php7-cli
             args:
                 TIMEZONE: ${TIMEZONE}
         volumes:
-            - ${SYMFONY_APP_PATH}:/var/www/symfony
-            - ./logs/symfony:/var/www/symfony/var/log
+            - "project-root:/randomqueue"
+            - "./logs/consumer:/var/log/php"
+        command: "composer up"
+
+    consumer:
+        container_name: randomqueue-consumer
+        image: randomqueue_php7-cli
+        environment:
+            APP_ENV: docker
+        links:
+            - mysql
+        depends_on:
+            - prepare
+        volumes:
+            - "project-root:/randomqueue"
+            - "./logs/consumer:/var/log/php"
+        command: "php /randomqueue/bin/console queue:consumer"
+
+    php-fpm:
+        container_name: randomqueue-php-fpm
+        image: randomqueue_php-fpm
+        environment:
+            APP_ENV: docker
+        links:
+            - mysql
+        depends_on:
+            - prepare
+        volumes:
+            - "project-root:/var/www"
+            - "./logs/php-fpm:/var/log/php"
     nginx:
-        container_name: container_nginx
+        container_name: randomqueue-nginx
+        image: randomqueue_nginx
         build:
             context: docker/nginx
             args:
                 MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
                 SERVER_NAME: ${SERVER_NAME}
+                WWW_ROOT_DIR: ${WWW_ROOT_DIR}
         ports:
             - "8080:80"
-        volumes_from:
-            - php
         volumes:
-            - ./logs/nginx/:/var/log/nginx
+            - "project-root:/var/www"
+            - "./logs/nginx:/var/log/nginx"
     mysql:
-        container_name: container_mysql
+        container_name: randomqueue-mysql
+        image: randomqueue_mysql
         build:
             context: docker/mysql
         volumes:
             - "./docker/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro"
-            - "./.data/mysql:/var/lib/mysql"
+            - "db-data:/var/lib/mysql"
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -38,8 +69,8 @@ services:
         ports:
             - "${MYSQL_PORT}:3306"
     rabbit:
-        container_name: container_rabbit
-        hostname: rabbit
+        container_name: randomqueue-rabbit
+        image: randomqueue_rabbit
         build:
             context: docker/rabbitmq
         environment:
@@ -50,8 +81,33 @@ services:
 #            RABBITMQ_LOGS: ~
 #            RABBITMQ_SASL_LOGS: ~
         volumes:
-            - ./.data/rabbitmq/:/var/lib/rabbitmq
-#            - ./logs/rabbitmq/:/var/log/rabbitmq
+            - "rabbit-data:/var/lib/rabbitmq"
+#            - "./logs/rabbitmq/:/var/log/rabbitmq"
         ports:
             - "5672:5672"
             - "15672:15672"
+
+    unittest:
+        restart: "no"
+        container_name: randomqueue-unittest
+        image: randomqueue_php7-cli
+        environment:
+            APP_ENV: docker
+        links:
+            - mysql
+        depends_on:
+            - prepare
+        volumes:
+            - "project-root:/randomqueue"
+            - "./logs/consumer:/var/log/php"
+        command: "bin/phpunit"
+
+volumes:
+    project-root:
+        driver: local
+        driver_opts:
+            type: none
+            device: ${PWD}
+            o: bind
+    db-data:
+    rabbit-data:

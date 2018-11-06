@@ -53,37 +53,37 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
         $ docker-compose exec php bash
         $ composer install
         ```
-6. (Optional) Xdebug: Configure your IDE to connect to port `9001` with key `PHPSTORM`
+6. (Optional) Xdebug: Configure your IDE to connect to port `9001` with key `PHPSTORM` (for web-interface)
 
 ## How does it work?
 
 We have the following *docker-compose* built images:
 
-* `nginx`: The Nginx webserver container in which the application volume is mounted.
-* `php`: The PHP-FPM container in which the application volume is mounted too.
+* `consumer`: The consumer container which starts the consumer when up.
+* `nginx`: The Nginx webserver container for accessing web interface.
+* `php-fpm`: The PHP-FPM container to run php for the web interface.
 * `mysql`: The MySQL database container.
-* `rabbitmq`: The RabbitMQ server/administration container.
+* `rabbit`: The RabbitMQ server/administration container.
 
 Running `docker-compose ps` should result in the following running containers:
 
 ```
            Name                          Command               State              Ports
 --------------------------------------------------------------------------------------------------
-container_mysql         /entrypoint.sh mysqld            Up      0.0.0.0:3366->3366/tcp
-container_nginx         nginx                            Up      443/tcp, 0.0.0.0:80->80/tcp
-container_phpfpm        php-fpm                          Up      0.0.0.0:9000->9000/tcp
-container_rabbit        rabbitmq:3-management            Up      4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:15672->15672
+randomqueue_mysql         /entrypoint.sh mysqld            Up      0.0.0.0:3366->3366/tcp
+randomqueue_nginx         nginx                            Up      443/tcp, 0.0.0.0:80->80/tcp
+randomqueue_php-fpm       php-fpm                          Up      0.0.0.0:9000->9000/tcp
+randomqueue_rabbit        rabbitmq:3-management            Up      4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:15672->15672
 ```
 
 ## Usage
 
 Once all the containers are up, our services are available at:
 
-* Symfony app: `http://symfony.dev:80`
-* Mysql server: `symfony.dev:3366`
-* RabbitMQ: `http://symfony.dev:15672`
-* Log files location: *logs/nginx* and *logs/symfony*
-
+* Symfony app: `http://localhost:8080`
+* Mysql server: `127.0.0.1:3366`
+* RabbitMQ: `http://localhost:15672`
+* Log files location: `logs/*`
 ---
 
 :tada: Now we can stop our stack with `docker-compose down` and start it again with `docker-compose up -d`

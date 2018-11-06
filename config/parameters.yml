@@ -1,7 +1,11 @@
 parameters:
     dir.vendor: 'vendor'
+    rabbitmq.host: 'rabbit'
+    rabbitmq.port: 5672
+    rabbitmq.user: '%env(RABBITMQ_USER)%'
+    rabbitmq.password: '%env(RABBITMQ_PASSWORD)%'
     rabbitmq.channel: 'randomnumber'
     email.admin: 'gt@kani.hu'
-    db.dsn: 'mysql:dbname=%env(MYSQL_DATABASE)%;host=%env(MYSQL_HOST)%;port=%env(MYSQL_PORT)%'
+    db.dsn: 'mysql:dbname=%env(MYSQL_DATABASE)%;host=mysql'
     db.user: '%env(MYSQL_USER)%'
     db.password: '%env(MYSQL_PASSWORD)%'
