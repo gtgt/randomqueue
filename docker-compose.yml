@@ -16,6 +16,10 @@ services:
     consumer:
         container_name: randomqueue-consumer
         image: randomqueue_php7-cli
+        build:
+            context: docker/php7-cli
+            args:
+                TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
         links:
@@ -30,6 +34,10 @@ services:
     php-fpm:
         container_name: randomqueue-php-fpm
         image: randomqueue_php-fpm
+        build:
+            context: docker/php7-cli
+            args:
+                TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
         links:
@@ -91,6 +99,10 @@ services:
         restart: "no"
         container_name: randomqueue-unittest
         image: randomqueue_php7-cli
+        build:
+            context: docker/php7-cli
+            args:
+                TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
         links:
