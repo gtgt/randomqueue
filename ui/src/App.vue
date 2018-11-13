@@ -56,7 +56,7 @@
 
   const searchByName = (items, term) => {
     if (term) {
-      return items.filter(item => toLower(item.name).includes(toLower(term)));
+      return items.filter(item => toLower(item.message).includes(toLower(term)));
     }
 
     return items;
@@ -92,12 +92,6 @@
           this.log = [];
           this.searched = [];
         });
-        /* const vm = this;
-        fetch('/log').then((response) => {
-          return response.json();
-        }).then((data) => {
-          vm.posts = data;
-        }); */
       },
       newJob() {
         this.$el.querySelector('#the-number').focus();
@@ -134,15 +128,15 @@
     },
     mounted() {
       this.refreshLog();
-      window.setTimeout(() => {
+      window.setInterval(() => {
         this.refreshLog();
-      }, 2000);
+      }, 5000);
     }
   };
 </script>
 
 <style lang="scss" scoped>
-  .md-field {
-    max-width: 300px;
+  .md-table-cell:nth-child(4), .md-table-header:nth-child(4) {
+    min-width: 400px;
   }
 </style>
