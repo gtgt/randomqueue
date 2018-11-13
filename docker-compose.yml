@@ -10,13 +10,14 @@ services:
                 TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
+            WAITFORIT_TIMEOUT: 10
         links:
             - mysql
             - rabbit
         volumes:
             - "project-root:/randomqueue"
             - "./logs/consumer:/var/log/php"
-        command: "php /randomqueue/bin/console queue:consumer"
+        command: ["/wait-for-it.sh", "rabbit:5672", "--", "php", "/randomqueue/bin/console", "queue:consumer"]
 
     php-fpm:
         container_name: randomqueue-php-fpm

@@ -25,7 +25,7 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
 
     ```sh
     $ docker-compose build
-    $ docker-compose up -d
+    $ docker-compose up -d # or without -d if you are debugging 
     ```
 
 3. Get the bridge IP address

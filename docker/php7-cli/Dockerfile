@@ -21,4 +21,7 @@ RUN docker-php-ext-install pdo_mysql bcmath
 # Create an alias for console
 RUN echo 'alias console="php /randomqueue/bin/console"' >> ~/.bashrc
 
+ADD wait-for-it.sh /
+RUN chmod a+x /wait-for-it.sh
+
 WORKDIR /randomqueue

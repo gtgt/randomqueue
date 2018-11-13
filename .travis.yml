@@ -16,8 +16,7 @@ before_install:
 script:
   - docker-compose build
   - docker-compose up -d
-  - docker-compose ps
-  - docker-compose up unittest
+  - sleep 8 && docker-compose ps
 
 notifications:
   email:
