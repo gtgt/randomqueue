@@ -1,7 +1,16 @@
 .idea
+.DS_Store
 vendor/*
 bin/phpunit
+cache/*
 logs/*
+www/i.php
 composer.lock
 .env
 .docker-compose.yml.swp
+ui/node_modules/
+www/ui
+ui/npm-debug.log*
+ui/yarn-debug.log*
+ui/yarn-error.log*
+ui/*.lock

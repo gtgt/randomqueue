@@ -1,0 +1,150 @@
+#!/bin/bash
+
+set -e
+set -u
+set -o pipefail
+
+COMMAND=${1:-"help"}
+NAME_PREFIX=randomqueue
+DENV=${DENV:-"dev"}
+ROOT_DIR=`dirname $0`
+
+function is-prod() {
+    [ $DENV == "prod" ]
+}
+
+function get-tag() {
+    if is-prod; then
+        date +%Y%m%d%H%I
+    else
+        echo "latest"
+    fi
+}
+
+function app-env() {
+    if is-prod; then
+        echo "prod"
+    else
+        echo "dev"
+    fi
+}
+
+function is-debug() {
+    if is-prod; then
+        echo "0"
+    else
+        echo "1"
+    fi
+}
+
+export SYMFONY_ENV=`app-env`
+export SYMFONY_DEBUG=`is-debug`
+export TAG=`get-tag`
+
+function compose-file() {
+    if is-prod; then
+        echo "docker-compose.prod.yml"
+    else
+        echo "docker-compose.yml"
+    fi
+}
+
+function ip() {
+    docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${1:-"${NAME_PREFIX}-php"}
+}
+
+function load-env() {
+    source "${ROOT_DIR}/.env"
+}
+
+function build() {
+    load-env
+    docker build -t myapp/php:7.0-fpm ./docker/php
+    docker-compose -f `compose-file` build ${1:-}
+}
+
+function up() {
+    load-env
+    container=${1:-}
+    if [ -z $container ]; then
+        docker-compose -f `compose-file` up -d rabbitmq
+        sleep 10
+    fi
+    docker-compose -f `compose-file` up -d $container
+    docker-compose scale myapp_filter_auctions=5
+    if ! is-prod; then
+        composer install --prefer-dist
+    fi
+}
+
+function stop() {
+    load-env
+    docker-compose -f `compose-file` stop ${1:-}
+}
+
+function rm() {
+    load-env
+    docker-compose -f `compose-file` rm ${1:-}
+}
+
+function logs() {
+    load-env
+    docker-compose -f `compose-file` logs -f ${1:-}
+}
+
+function ps() {
+    load-env
+    docker-compose -f `compose-file` ps
+}
+
+function php() {
+    exec myapp php ${@:-"-v"}
+}
+
+function sh() {
+    exec myapp ${@:-"sh"}
+}
+
+function composer() {
+    exec myapp composer ${@:-""}
+}
+
+function exec() {
+    container=${1:-""}
+    command=${@:2}
+    if [ "" == "$container" ]; then
+      echo "Usage: $0 container_name [command]"
+      exit 1
+    fi
+    if [ "" == "$command" ]; then
+      command=sh
+    fi
+    load-env
+    docker-compose -f `compose-file` exec $container $command
+}
+
+function run() {
+    container=${1:-""}
+    command=${@:2}
+    if [ "" == "$container" ]; then
+      echo "Usage: $0 container_name [command]"
+      exit 1
+    fi
+    if [ "" == "$command" ]; then
+      command=sh
+    fi
+    load-env
+    docker-compose -f `compose-file` run --rm $container $command
+}
+
+function help() {
+    USAGE="$0 "$(compgen -A function | tr "\\n" "|" | sed 's/|$//')
+    echo $USAGE
+}
+
+if [ "$(type -t $COMMAND)" != "function" ]; then
+    help
+    exit 1
+fi
+
+$COMMAND ${@:2}

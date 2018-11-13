@@ -19,7 +19,7 @@ function exception_error_handler($severity, $message, $file, $line) {
 }
 set_error_handler('exception_error_handler');
 
-$container = new \RandomQueue\RandomQueueContainer();
+$container = \RandomQueue\RandomQueueCommandContainerBuilder::getContainer(TRUE);
 
 $application = $container->get(\Symfony\Component\Console\Application::class);
 /** @noinspection MissingService Added by AddConsoleCommandPass */

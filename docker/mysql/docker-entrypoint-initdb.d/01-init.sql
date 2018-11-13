@@ -1,6 +1,5 @@
-CREATE DATABASE IF NOT EXISTS randomqueue;
-
-CREATE TABLE `log` (
+--- Database creation and use commands executed by Dockerfile...
+CREATE TABLE IF NOT EXISTS `log` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `time` int(10) unsigned DEFAULT NULL,
   `level` tinyint(1) unsigned DEFAULT NULL,

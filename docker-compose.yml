@@ -1,18 +1,6 @@
 version: '3'
 
 services:
-    prepare:
-        container_name: randomqueue-prepare
-        image: randomqueue_php7-cli
-        build:
-            context: docker/php7-cli
-            args:
-                TIMEZONE: ${TIMEZONE}
-        volumes:
-            - "project-root:/randomqueue"
-            - "./logs/consumer:/var/log/php"
-        command: "composer up"
-
     consumer:
         container_name: randomqueue-consumer
         image: randomqueue_php7-cli
@@ -24,8 +12,7 @@ services:
             APP_ENV: docker
         links:
             - mysql
-        depends_on:
-            - prepare
+            - rabbit
         volumes:
             - "project-root:/randomqueue"
             - "./logs/consumer:/var/log/php"
@@ -35,15 +22,13 @@ services:
         container_name: randomqueue-php-fpm
         image: randomqueue_php-fpm
         build:
-            context: docker/php7-cli
+            context: docker/php7-fpm
             args:
                 TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
         links:
             - mysql
-        depends_on:
-            - prepare
         volumes:
             - "project-root:/var/www"
             - "./logs/php-fpm:/var/log/php"
@@ -56,6 +41,8 @@ services:
                 MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
                 SERVER_NAME: ${SERVER_NAME}
                 WWW_ROOT_DIR: ${WWW_ROOT_DIR}
+        links:
+            - php-fpm
         ports:
             - "8080:80"
         volumes:
@@ -94,25 +81,6 @@ services:
         ports:
             - "5672:5672"
             - "15672:15672"
-
-    unittest:
-        restart: "no"
-        container_name: randomqueue-unittest
-        image: randomqueue_php7-cli
-        build:
-            context: docker/php7-cli
-            args:
-                TIMEZONE: ${TIMEZONE}
-        environment:
-            APP_ENV: docker
-        links:
-            - mysql
-        depends_on:
-            - prepare
-        volumes:
-            - "project-root:/randomqueue"
-            - "./logs/consumer:/var/log/php"
-        command: "bin/phpunit"
 
 volumes:
     project-root:

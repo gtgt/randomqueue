@@ -98,7 +98,10 @@ services:
     #
 
     RandomQueue\:
-        resource: '../src/*'
+        resource: '../src/*/*'
+
+    RandomQueue\Routing\RouteRegistry:
+        public: true
 
     RandomQueue\Queue\Worker:
         public: true
