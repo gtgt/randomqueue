@@ -10,7 +10,7 @@ services:
                 TIMEZONE: ${TIMEZONE}
         environment:
             APP_ENV: docker
-            WAITFORIT_TIMEOUT: 10
+            WAITFORIT_TIMEOUT: 30
         links:
             - mysql
             - rabbit
