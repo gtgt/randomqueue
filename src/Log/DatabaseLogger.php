@@ -5,22 +5,18 @@ namespace RandomQueue\Log;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use RandomQueue\Exception\LoggerException;
 
 class DatabaseLogger implements LoggerInterface {
-    public const DEBUG = 1; // Most Verbose
-    public const INFO = 2; // ...
-    public const NOTICE = 3; // ...
-    public const WARN = 4; // ...
-    public const ERROR = 5; // ...
-    public const CRITICAL = 6; // ...
-    public const ALERT = 7; // ...
-    public const EMERGENCY = 8; // Least Verbose
-    public const OFF = 9; // Nothing at all.
-
     protected const LOG_OPEN = 10;
     protected const OPEN_FAILED = 20;
     protected const LOG_CLOSED = 30;
+
+    /**
+     * @var string[]|array|null
+     */
+    protected static $numLevels;
 
     /**
      * @var int
@@ -44,11 +40,10 @@ class DatabaseLogger implements LoggerInterface {
 
 
     /**
-     * @param \PDO $pdo   Database storage
-     * @param int  $level Priority
-     *
+     * @param \PDO   $pdo   Database storage
+     * @param string $level Priority
      */
-    public function __construct(\PDO $pdo, int $level) {
+    public function __construct(\PDO $pdo, string $level) {
         $this->status = self::LOG_OPEN;
         try {
             // @TODO: move to services.yml
@@ -58,14 +53,33 @@ class DatabaseLogger implements LoggerInterface {
             $this->status = self::OPEN_FAILED;
         }
         $this->pdo = $pdo;
-        $this->level = $level;
+        $this->level = self::level2int($level);
+    }
+
+    /**
+     * Makes integer from levels of LogLevel.
+     *
+     * @param $level
+     *
+     * @return int
+     */
+    protected static function level2int($level) {
+        if (NULL === self::$numLevels) {
+            try {
+                $levels = (new \ReflectionClass(LogLevel::class))->getConstants();
+            } catch (\ReflectionException $e) {
+                return -1;
+            }
+            self::$numLevels = array_flip(array_reverse(array_values($levels)));
+        }
+        return array_key_exists($level, self::$numLevels) ? self::$numLevels[$level] : -1;
     }
 
 
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed  $level
+     * @param string  $level
      * @param string $message
      * @param array  $context
      *
@@ -73,6 +87,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function log($level, $message, array $context = []) {
+        $level = is_numeric($level) ? (int)$level : self::level2int($level);
         if ($this->level <= $level) {
             $message = (string)$message;
             $strContext = '';
@@ -108,7 +123,7 @@ class DatabaseLogger implements LoggerInterface {
      * @param $strContext
      */
     protected function store($level, $message, $strContext) {
-        if ($this->level === self::OFF) {
+        if ($this->level < 0) {
             return;
         }
 
@@ -136,7 +151,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function emergency($message, array $context = []) {
-        $this->log(self::EMERGENCY, $message, $context);
+        $this->log(LogLevel::EMERGENCY, $message, $context);
     }
 
     /**
@@ -153,7 +168,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function alert($message, array $context = []) {
-        $this->log(self::ALERT, $message, $context);
+        $this->log(LogLevel::ALERT, $message, $context);
     }
 
     /**
@@ -169,7 +184,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function critical($message, array $context = []) {
-        $this->log(self::CRITICAL, $message, $context);
+        $this->log(LogLevel::CRITICAL, $message, $context);
     }
 
     /**
@@ -184,7 +199,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function error($message, array $context = []) {
-        $this->log(self::ERROR, $message, $context);
+        $this->log(LogLevel::ERROR, $message, $context);
     }
 
     /**
@@ -201,7 +216,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function warning($message, array $context = []) {
-        $this->log(self::WARN, $message, $context);
+        $this->log(LogLevel::WARNING, $message, $context);
     }
 
     /**
@@ -215,7 +230,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function notice($message, array $context = []) {
-        $this->log(self::NOTICE, $message, $context);
+        $this->log(LogLevel::NOTICE, $message, $context);
     }
 
     /**
@@ -231,7 +246,7 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function info($message, array $context = []) {
-        $this->log(self::INFO, $message, $context);
+        $this->log(LogLevel::INFO, $message, $context);
     }
 
     /**
@@ -245,6 +260,6 @@ class DatabaseLogger implements LoggerInterface {
      * @throws Exception
      */
     public function debug($message, array $context = []) {
-        $this->log(self::DEBUG, $message, $context);
+        $this->log(LogLevel::DEBUG, $message, $context);
     }
 }

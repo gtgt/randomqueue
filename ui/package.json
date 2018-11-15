@@ -61,6 +61,7 @@
     "rimraf": "^2.6.2",
     "sass-loader": "^7.1.0",
     "shelljs": "^0.8.2",
+    "vue-json-tree-view": "^2.1.4",
     "vue-loader": "^13.0.5",
     "vue-resource": "^1.5.1",
     "vue-template-compiler": "^2.4.4",

@@ -113,4 +113,8 @@ class Worker {
         $this->getChannel()->close();
         $this->connection->close();
     }
+
+    public function __destruct() {
+        $this->close();
+    }
 }

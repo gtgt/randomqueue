@@ -36,7 +36,7 @@ class QueueJobAddCommand extends Command implements LoggerAwareInterface {
     protected function execute(InputInterface $input, OutputInterface $output) {
         $theNumber = $input->getArgument('number');
         $this->worker->addJob(new RandomNumberJob($theNumber));
-        $this->logger->info(sprintf('Added job with number: %d.', $theNumber));
+        $this->logger->info(sprintf('Added job by command with number: %d.', $theNumber));
         $this->worker->close();
     }
 }

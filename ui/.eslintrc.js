@@ -54,5 +54,6 @@ module.exports = {
     'no-alert': 'off',
     'no-new': 'off',
     'no-unused-vars': 'off',
+    'no-restricted-globals': 'off'
   }
 }

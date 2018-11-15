@@ -1,17 +1,23 @@
 <template>
   <div>
-    <md-toolbar md-elevation="1">
-      <h3 class="md-title" style="flex: 1">Title</h3>
+    <md-toolbar md-elevation="1" class="md-large md-dense">
+      <h3 class="md-title" style="flex: 1">RandomQueue UI</h3>
       <form novalidate class="md-layout" @submit.prevent="validateJob">
-          <md-field  :class="getValidationClass('theNumber')">
-            <label for="the-number">The number</label>
-            <md-input id="the-number" name="the-number" v-model="form.theNumber" :disabled="sending" :class="getValidationClass('theNumber')"></md-input>
-            <span class="md-helper-text">Helper text</span>
-            <span class="md-error" v-if="!$v.form.theNumber.numeric">The numeric value is required</span>
-            <span class="md-error" v-else-if="!$v.form.theNumber.minValue">The value should be greater than zero.</span>
-          </md-field>
+          <div class="md-layout md-alignment-bottom">
+            <div class="md-layout-item md-small-size-100">
+              <md-field  :class="getValidationClass('theNumber')">
+                <label for="the-number">The number</label>
+                <md-input id="the-number" name="the-number" v-model="form.theNumber" :disabled="sending" :class="getValidationClass('theNumber')"></md-input>
+                <span class="md-helper-text">Only integers are allowed.</span>
+                <span class="md-error" v-if="!$v.form.theNumber.numeric">The numeric value is required</span>
+                <span class="md-error" v-else-if="!$v.form.theNumber.minValue">The value should be greater than zero.</span>
+              </md-field>
+            </div>
+            <div class="md-layout-item md-small-size-100">
+              <md-button type="submit" class="md-primary" :disabled="sending">Create job</md-button>
+            </div>
+          </div>
           <md-progress-bar md-mode="indeterminate" v-if="sending" />
-          <md-button type="submit" class="md-primary" :disabled="sending">Create job</md-button>
           <md-snackbar :md-active.sync="jobSent">The job was sent!</md-snackbar>
       </form>
     </md-toolbar>
@@ -34,10 +40,10 @@
 
       <md-table-row slot="md-table-row" slot-scope="{ item }">
         <md-table-cell md-label="ID" md-sort-by="id" md-numeric>{{ item.id }}</md-table-cell>
-        <md-table-cell md-label="Time" md-sort-by="time">{{ item.time }}</md-table-cell>
-        <md-table-cell md-label="Level" md-sort-by="level">{{ item.level }}</md-table-cell>
+        <md-table-cell md-label="Time" md-sort-by="time">{{ item.time|time }}</md-table-cell>
+        <md-table-cell md-label="Level" md-sort-by="level">{{ item.level|level }}</md-table-cell>
         <md-table-cell md-label="Message" md-sort-by="message">{{ item.message }}</md-table-cell>
-        <md-table-cell md-label="Context" md-sort-by="context">{{ item.context }}</md-table-cell>
+        <md-table-cell md-label="Context" md-sort-by="context"><tree-view :data="item.context|contextView" :options="{maxDepth: 2, rootObjectKey: 'context'}"></tree-view></md-table-cell>
       </md-table-row>
     </md-table>
   </div>
@@ -102,11 +108,15 @@
       sendJob() {
         this.sending = true;
 
-        window.setTimeout(() => {
+        this.$http.post('/job/new', { number: this.form.theNumber }).then(response => {
           this.form.theNumber = null;
           this.sending = false;
           this.jobSent = true;
-        }, 1500);
+        }, response => {
+          this.form.theNumber = null;
+          this.sending = false;
+          this.jobSent = true;
+        });
       },
       getValidationClass(fieldName) {
         const field = this.$v.form[fieldName];
@@ -126,6 +136,25 @@
         }
       }
     },
+    filters: {
+      time(value) {
+        if (isNaN(value)) return '';
+        const time = new Date(value * 1000);
+        return `${time.getFullYear()}.${time.getMonth()}.${time.getDay()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+      },
+      level(value) {
+        const levels = ['debug', 'info', 'notice', 'warning', 'error', 'critical', 'alert', 'emergency'];
+        return levels[value] ? levels[value] : '-';
+      },
+      contextView(value) {
+        if (!value) return {};
+        const context = JSON.parse(value);
+        if (context && context.exception && context.exception.xdebug_message) {
+          context.exception.xdebug_message = context.exception.xdebug_message.split('\n');
+        }
+        return context;
+      }
+    },
     mounted() {
       this.refreshLog();
       window.setInterval(() => {
@@ -136,6 +165,9 @@
 </script>
 
 <style lang="scss" scoped>
+  .md-field {
+    max-width: 300px;
+  }
   .md-table-cell:nth-child(4), .md-table-header:nth-child(4) {
     min-width: 400px;
   }

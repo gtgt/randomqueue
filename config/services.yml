@@ -40,7 +40,7 @@ services:
         class: RandomQueue\Log\DatabaseLogger
         public: true
         arguments:
-            $level: !php/const RandomQueue\Log\DatabaseLogger::DEBUG
+            $level: !php/const Psr\Log\LogLevel::DEBUG
 
     logger.console:
         class: Symfony\Component\Console\Logger\ConsoleLogger

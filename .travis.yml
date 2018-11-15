@@ -16,7 +16,7 @@ before_install:
 script:
   - docker-compose build
   - docker-compose up -d
-  - sleep 8 && docker-compose ps
+  - sleep 10 && docker-compose ps
 
 notifications:
   email:
