@@ -171,4 +171,10 @@
   .md-table-cell:nth-child(4), .md-table-header:nth-child(4) {
     min-width: 400px;
   }
+  .md-table-cell:nth-child(5), .md-table-header:nth-child(5) {
+    width: 40%;
+  }
+  .tree-view-wrapper {
+    overflow: initial!important;
+  }
 </style>
