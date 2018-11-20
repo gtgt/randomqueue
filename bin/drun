@@ -4,9 +4,22 @@ set -e
 set -u
 set -o pipefail
 
+realpath() {
+  f=$@;
+  if [ -d "$f" ]; then
+    base="";
+    dir="$f";
+  else
+    base="/$(basename "$f")";
+    dir=$(dirname "$f");
+  fi;
+  dir=$(cd "$dir" && /bin/pwd);
+  echo "$dir$base"
+}
+
 COMMAND=${1:-"help"}
 NAME_PREFIX=randomqueue
-ROOT_DIR=$(/usr/bin/realpath $(/usr/bin/dirname $0)/..)
+ROOT_DIR=$(realpath $(/usr/bin/dirname ${BASH_SOURCE[0]:=${0}})/..)
 . "${ROOT_DIR}/.env"
 APP_ENV=${APP_ENV:-"none"}
 
