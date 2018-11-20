@@ -15,7 +15,7 @@ before_install:
 
 script:
   - docker-compose build
-  - bin/drun test
+  - bin/drun run-test
   - docker-compose up -d
   - sleep 10 && docker-compose ps
 
