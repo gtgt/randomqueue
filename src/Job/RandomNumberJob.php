@@ -36,7 +36,7 @@ class RandomNumberJob extends AbstractJob {
      */
     public function doIt() {
         // 66% of jobs should fail. Reminder of division by 3 should do it :)
-        $numberToTry = microtime(TRUE) * 10000 + $this->theNumber;
+        $numberToTry = $this->getFailCount() + $this->theNumber;
         if ($numberToTry % 3) {
             throw new JobFailedException(sprintf('Wrong number: %d!', $numberToTry));
         }

@@ -45,7 +45,7 @@ abstract class AbstractRandomQueueContainerBuilder extends ContainerBuilder {
     /**
      * @param bool $isDebug
      *
-     * @return \ProjectServiceContainer|AbstractRandomQueueContainerBuilder
+     * @return \ProjectServiceContainer|$this
      *
      * @throws \Exception
      */

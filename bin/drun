@@ -6,26 +6,23 @@ set -o pipefail
 
 COMMAND=${1:-"help"}
 NAME_PREFIX=randomqueue
-DENV=${DENV:-"dev"}
-ROOT_DIR=`dirname $0`
+ROOT_DIR=$(realpath $(dirname $0)/..)
+. "${ROOT_DIR}/.env"
+APP_ENV=${APP_ENV:-"none"}
+
+function app-env() {
+    echo ${APP_ENV}
+}
 
 function is-prod() {
-    [ $DENV == "prod" ]
+    [[ ${APP_ENV} == "prod" ]]
 }
 
 function get-tag() {
     if is-prod; then
         date +%Y%m%d%H%I
     else
-        echo "latest"
-    fi
-}
-
-function app-env() {
-    if is-prod; then
-        echo "prod"
-    else
-        echo "dev"
+        echo `app-env`
     fi
 }
 
@@ -36,10 +33,6 @@ function is-debug() {
         echo "1"
     fi
 }
-
-export SYMFONY_ENV=`app-env`
-export SYMFONY_DEBUG=`is-debug`
-export TAG=`get-tag`
 
 function compose-file() {
     if is-prod; then
@@ -53,98 +46,111 @@ function ip() {
     docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${1:-"${NAME_PREFIX}-php"}
 }
 
-function load-env() {
-    source "${ROOT_DIR}/.env"
-}
-
 function build() {
-    load-env
-    docker build -t myapp/php:7.0-fpm ./docker/php
     docker-compose -f `compose-file` build ${1:-}
 }
 
 function up() {
-    load-env
     container=${1:-}
-    if [ -z $container ]; then
-        docker-compose -f `compose-file` up -d rabbitmq
-        sleep 10
-    fi
-    docker-compose -f `compose-file` up -d $container
-    docker-compose scale myapp_filter_auctions=5
+    docker-compose -f `compose-file` up -d ${container}
     if ! is-prod; then
         composer install --prefer-dist
     fi
 }
 
 function stop() {
-    load-env
     docker-compose -f `compose-file` stop ${1:-}
 }
 
 function rm() {
-    load-env
     docker-compose -f `compose-file` rm ${1:-}
 }
 
 function logs() {
-    load-env
     docker-compose -f `compose-file` logs -f ${1:-}
 }
 
 function ps() {
-    load-env
     docker-compose -f `compose-file` ps
 }
 
 function php() {
-    exec myapp php ${@:-"-v"}
+    exec consumer php ${@:-"-v"}
 }
 
 function sh() {
-    exec myapp ${@:-"sh"}
+    exec consumer ${@:-"sh"}
 }
 
 function composer() {
-    exec myapp composer ${@:-""}
+    exec php-fpm composer ${@:-""}
+    exec consumer composer ${@:-""}
+}
+
+function run-test() {
+    cleanup
+    run-docker php7-cli bin/phpunit
 }
 
 function exec() {
     container=${1:-""}
     command=${@:2}
-    if [ "" == "$container" ]; then
+    if [[ "" == "$container" ]]; then
       echo "Usage: $0 container_name [command]"
       exit 1
     fi
-    if [ "" == "$command" ]; then
+    if [[ "" == "$command" ]]; then
       command=sh
     fi
-    load-env
-    docker-compose -f `compose-file` exec $container $command
+    docker-compose -f `compose-file` exec ${container} ${command}
 }
 
 function run() {
     container=${1:-""}
     command=${@:2}
-    if [ "" == "$container" ]; then
+    if [[ "" == "$container" ]]; then
       echo "Usage: $0 container_name [command]"
       exit 1
     fi
-    if [ "" == "$command" ]; then
+    if [[ "" == "$command" ]]; then
       command=sh
     fi
-    load-env
-    docker-compose -f `compose-file` run --rm $container $command
+    docker-compose -f `compose-file` run --rm ${container} ${command}
+}
+
+function run-docker() {
+    context=${1:-""}
+    command=${@:2}
+    if [[ "" == "$context" ]]; then
+      echo "Usage: $0 context [command]"
+      exit 1
+    fi
+    if [[ "" == "$command" ]]; then
+      command=sh
+    fi
+    existing_container_id=$(docker container ls -a -q --filter=name=randomqueue-exec)
+    if [[ "" != ${existing_container_id} ]]; then
+        docker rm ${existing_container_id}
+    fi
+    docker run --rm --name="${NAME_PREFIX}-exec" --net=host -v "${ROOT_DIR}:/randomqueue" -it "${NAME_PREFIX}_$context" ${command}
+}
+
+function cleanup() {
+    #junk_containers=$(docker images -a|grep "<none>"|awk '$1=="<none>" {print $3}')
+    junk_containers=$(docker images -f "dangling=true" -q --no-trunc)
+    if [[ "" != ${junk_containers} ]]; then
+        docker rmi ${junk_containers}
+    fi
 }
 
 function help() {
     USAGE="$0 "$(compgen -A function | tr "\\n" "|" | sed 's/|$//')
-    echo $USAGE
+    echo ${USAGE}
 }
 
-if [ "$(type -t $COMMAND)" != "function" ]; then
+if [[ "$(type -t ${COMMAND})" != "function" ]]; then
     help
     exit 1
 fi
 
-$COMMAND ${@:2}
+${COMMAND} ${@:2}

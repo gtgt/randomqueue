@@ -1,7 +1,7 @@
 sudo: required
 
 env:
-  DOCKER_COMPOSE_VERSION: 1.18.0
+  DOCKER_COMPOSE_VERSION: 1.23.0
 
 services:
   - docker
@@ -15,6 +15,7 @@ before_install:
 
 script:
   - docker-compose build
+  - bin/drun test
   - docker-compose up -d
   - sleep 10 && docker-compose ps
 
