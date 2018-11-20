@@ -96,8 +96,7 @@ function sh() {
 }
 
 function composer() {
-    exec php-fpm composer ${@:-""}
-    exec consumer composer ${@:-""}
+    run-docker php7-cli composer ${@:-""}
 }
 
 function run-test() {
