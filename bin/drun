@@ -6,7 +6,7 @@ set -o pipefail
 
 COMMAND=${1:-"help"}
 NAME_PREFIX=randomqueue
-ROOT_DIR=$(realpath $(dirname $0)/..)
+ROOT_DIR=$(/usr/bin/realpath $(/usr/bin/dirname $0)/..)
 . "${ROOT_DIR}/.env"
 APP_ENV=${APP_ENV:-"none"}
 
@@ -88,7 +88,6 @@ function composer() {
 }
 
 function run-test() {
-    cleanup
     run-docker php7-cli composer up && bin/phpunit
 }
 
@@ -130,7 +129,7 @@ function run-docker() {
     fi
     existing_container_id=$(docker container ls -a -q --filter=name=randomqueue-exec)
     if [[ "" != ${existing_container_id} ]]; then
-        docker rm ${existing_container_id}
+        docker rm -f ${existing_container_id}
     fi
     docker run --rm --name="${NAME_PREFIX}-exec" --net=host -v "${ROOT_DIR}:/randomqueue" -it "${NAME_PREFIX}_$context" ${command}
 }
