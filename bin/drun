@@ -100,7 +100,8 @@ function composer() {
 }
 
 function run-test() {
-    run-docker php7-cli "composer up && bin/phpunit"
+    composer up
+    run-docker php7-cli bin/phpunit
 }
 
 function exec() {
