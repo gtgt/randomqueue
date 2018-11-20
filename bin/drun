@@ -89,7 +89,7 @@ function composer() {
 
 function run-test() {
     cleanup
-    run-docker php7-cli bin/phpunit
+    run-docker php7-cli composer up && bin/phpunit
 }
 
 function exec() {
