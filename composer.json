@@ -1,6 +1,6 @@
 {
     "name": "gt/randomqueue",
-    "description": "Test random number queue application using RabbitMQ for IBM",
+    "description": "Test random number queue application using RabbitMQ",
     "type": "project",
     "minimum-stability": "dev",
     "prefer-stable": true,
