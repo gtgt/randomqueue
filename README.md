@@ -1,4 +1,4 @@
-# Test random number queue application using RabbitMQ for IBM
+# Test random number queue application using RabbitMQ
 
 [![Build Status](https://travis-ci.org/gtgt/randomqueue.svg?branch=master&style=flat-square)](https://travis-ci.org/gtgt/randomqueue)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](LICENSE)
