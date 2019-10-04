@@ -49,7 +49,6 @@ services:
                 MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
                 SERVER_NAME: ${SERVER_NAME}
                 WWW_ROOT_DIR: ${WWW_ROOT_DIR}
-        user: ${CURRENT_UID}
         links:
             - php-fpm
         depends_on:
