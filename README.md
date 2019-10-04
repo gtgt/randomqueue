@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/gtgt/randomqueue.svg?branch=master&style=flat-square)](https://travis-ci.org/gtgt/randomqueue)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](LICENSE)
 
-The task is to write an application for the supercomputer Deep Thought (specially built for this purpose) which return with the "Answer to the Ultimate Question of Life, the Universe, and Everything".
+The task is to write an application for the supercomputer Deep Thought (specially built for this purpose) which inputs any number and returns with the "Answer to the Ultimate Question of Life, the Universe, and Everything".
 
 * Symfony, RabbitMQ and php-amqplib must be used to process the job with queues.
 * The supercomputer is not perfect, so around 2/3 of the jobs should fail.
@@ -29,25 +29,8 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
     ```sh
     $ cp .env.dist .env && nano .env
     ```
-2. Build and run the stack in detached mode (stop any system's ngixn/apache2 service first)
-
-    ```sh
-    $ docker-compose build
-    $ docker-compose up -d # or without -d if you are debugging 
-    ```
-
-3. Get the bridge IP address
-
-    ```sh
-    $ docker network inspect bridge | grep Gateway | grep -o -E '[0-9\.]+'
-    # OR an alternative command
-    $ ifconfig docker0 | awk '/inet:/{ print substr($2,6); exit }'
-    ```
-
-4. Update your system's hosts file with the IP retrieved in **step 3**
-
-5. Prepare the Symfony application
-    1. Update Symfony env variables (*.env*)
+2. Prepare the Symfony application
+    1. Update Symfony env variables (*.env*) (use mysql user/pass you set above)
 
         ```
         #...
@@ -58,7 +41,23 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
     2. Composer install & update the schema from the container
 
         ```sh
-        $ docker-compose exec php-fpm composer install
+        $ composer install
+3. Build and run the stack in detached mode (stop any system's ngixn/apache2 service first)
+
+    ```sh
+    $ docker-compose build
+    $ docker-compose up -d # or without -d if you are debugging 
+    ```
+
+4. Get the bridge IP address
+
+    ```sh
+    $ docker network inspect bridge | grep Gateway | grep -o -E '[0-9\.]+'
+    # OR an alternative command
+    $ ifconfig docker0 | awk '/inet:/{ print substr($2,6); exit }'
+    ```
+
+5. Update your system's hosts file with the IP retrieved in **step 3**
         ```
 6. (Optional) Xdebug: Configure your IDE to connect to port `9001` with key `PHPSTORM` (for web-interface)
 
