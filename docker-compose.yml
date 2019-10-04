@@ -8,6 +8,7 @@ services:
             context: docker/php7-cli
             args:
                 TIMEZONE: ${TIMEZONE}
+        user: ${CURRENT_UID}
         environment:
             APP_ENV: docker
             WAITFORIT_TIMEOUT: 30
@@ -29,6 +30,7 @@ services:
             context: docker/php7-fpm
             args:
                 TIMEZONE: ${TIMEZONE}
+        user: ${CURRENT_UID}
         environment:
             APP_ENV: docker
         links:
@@ -47,6 +49,7 @@ services:
                 MAX_EXECUTION_TIME: ${MAX_EXECUTION_TIME}
                 SERVER_NAME: ${SERVER_NAME}
                 WWW_ROOT_DIR: ${WWW_ROOT_DIR}
+        user: ${CURRENT_UID}
         links:
             - php-fpm
         depends_on:
@@ -61,6 +64,7 @@ services:
         image: randomqueue_mysql
         build:
             context: docker/mysql
+        user: ${CURRENT_UID}
         volumes:
             - "./docker/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro"
             - "db-data:/var/lib/mysql"
@@ -76,6 +80,7 @@ services:
         image: randomqueue_rabbit
         build:
             context: docker/rabbitmq
+        user: ${CURRENT_UID}
         environment:
             RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
             RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
