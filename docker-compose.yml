@@ -64,7 +64,6 @@ services:
         image: randomqueue_mysql
         build:
             context: docker/mysql
-        user: ${CURRENT_UID}
         volumes:
             - "./docker/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro"
             - "db-data:/var/lib/mysql"
@@ -80,7 +79,6 @@ services:
         image: randomqueue_rabbit
         build:
             context: docker/rabbitmq
-        user: ${CURRENT_UID}
         environment:
             RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
             RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
