@@ -38,10 +38,12 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
         #...
         ```
 
-    2. Composer install & update the schema from the container
+    2. Composer install & update the schema from the container, create cache dir
 
         ```sh
         $ composer install
+        $ mkdir -p cache
+        ```
 3. Build and run the stack in detached mode (stop any system's ngixn/apache2 service first)
 
     ```sh
@@ -58,7 +60,6 @@ This stack needs [docker](https://www.docker.com/) and [docker-compose](https://
     ```
 
 5. Update your system's hosts file with the IP retrieved in **step 3**
-        ```
 6. (Optional) Xdebug: Configure your IDE to connect to port `9001` with key `PHPSTORM` (for web-interface)
 
 ## How does it work?
