@@ -1,11 +1,7 @@
 <?php
-
-
 namespace RandomQueue\Event;
 
-
 use PhpAmqpLib\Message\AMQPMessage;
-use RandomQueue\Exception\JobFailedException;
 use RandomQueue\Job\JobInterface;
 
 class JobSuccessfulEvent extends AbstractJobEvent {

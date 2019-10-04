@@ -1,13 +1,14 @@
 <?php
 namespace RandomQueue\Tests\Job;
 
+use RandomQueue\Exception\InvalidJobArgumentException;
 use RandomQueue\Exception\JobFailedException;
 use RandomQueue\Job\RandomNumberJob;
 use RandomQueue\Test\AbstractTest;
 
 class RandomNumberJobTest extends AbstractTest {
     /**
-     * @expectedException \RandomQueue\Exception\InvalidJobArgumentException
+     * @expectedException InvalidJobArgumentException
      */
     public function testNonNumeric() {
        new RandomNumberJob('abc');

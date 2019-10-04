@@ -4,6 +4,7 @@
 namespace RandomQueue\Queue;
 
 
+use Exception;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -11,7 +12,6 @@ use RandomQueue\Event\JobFailedEvent;
 use RandomQueue\Event\JobSuccessfulEvent;
 use RandomQueue\Exception\JobFailedException;
 use RandomQueue\Job\JobInterface;
-use RandomQueue\RandomQueueEvents;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Worker {
@@ -62,11 +62,15 @@ class Worker {
 
     /**
      * @param JobInterface $job
+     *
+     * @return AMQPMessage
      */
-    public function addJob(JobInterface $job): void {
+    public function addJob(JobInterface $job): AMQPMessage {
         $channel = $this->getChannel();
         $channel->queue_declare($this->channelName, FALSE, TRUE, FALSE, FALSE);
-        $channel->basic_publish($this->transformer->transform($job), '', $this->channelName);
+        $message = $this->transformer->transform($job);
+        $channel->basic_publish($message, '', $this->channelName);
+        return $message;
     }
 
     /**
@@ -81,15 +85,15 @@ class Worker {
             $e = NULL;
             try {
                 $result = $job->doIt();
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // always use JobFailedException
                 if (!$e instanceof JobFailedException) {
                     $e = new JobFailedException(sprintf('Job (%s) failed: %d!', \get_class($job), $e->getMessage()), 0, $e);
                 }
-                $this->eventDispatcher->dispatch(RandomQueueEvents::JOB_FAILED, new JobFailedEvent($job, $message, $e));
+                $this->eventDispatcher->dispatch(new JobFailedEvent($job, $message, $e));
             }
             if ($e === NULL) {
-                $this->eventDispatcher->dispatch(RandomQueueEvents::JOB_SUCCESSFUL, new JobSuccessfulEvent($job, $message, $result));
+                $this->eventDispatcher->dispatch(new JobSuccessfulEvent($job, $message, $result));
             }
             $channel = $message->delivery_info['channel'];
             // acknowledge if supported
@@ -110,8 +114,12 @@ class Worker {
      * Can be reopened by calling cvonsume() or addJob().
      */
     public function close(): void {
-        $this->getChannel()->close();
-        $this->connection->close();
+        try {
+            $this->getChannel()->close();
+            $this->connection->close();
+        } catch (Exception $e) {
+            // doesn't matter if this fails
+        }
     }
 
     public function __destruct() {

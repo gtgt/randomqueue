@@ -14,10 +14,13 @@ services:
         links:
             - mysql
             - rabbit
+        depends_on:
+            - mysql
+            - rabbit
         volumes:
             - "project-root:/randomqueue"
             - "./logs/consumer:/var/log/php"
-        command: ["/wait-for-it.sh", "rabbit:5672", "--", "php", "/randomqueue/bin/console", "queue:consumer"]
+        command: ["/wait-for-it.sh", "--host=rabbit", "--port=5672", "--timeout=15", "--", "php", "/randomqueue/bin/console", "queue:consumer"]
 
     php-fpm:
         container_name: randomqueue-php-fpm
@@ -29,6 +32,8 @@ services:
         environment:
             APP_ENV: docker
         links:
+            - mysql
+        depends_on:
             - mysql
         volumes:
             - "project-root:/var/www"
@@ -43,6 +48,8 @@ services:
                 SERVER_NAME: ${SERVER_NAME}
                 WWW_ROOT_DIR: ${WWW_ROOT_DIR}
         links:
+            - php-fpm
+        depends_on:
             - php-fpm
         ports:
             - "8081:80"

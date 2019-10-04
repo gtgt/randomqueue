@@ -4,6 +4,7 @@
 namespace RandomQueue\Test;
 
 
+use function array_key_exists;
 use PHPUnit\Framework\TestCase;
 
 class AbstractTest extends TestCase {
@@ -19,9 +20,10 @@ class AbstractTest extends TestCase {
      * @throws \Exception
      */
     protected static function getContainer(bool $isDebug = true) {
-        if (!array_key_exists($isDebug, self::$container)) {
-            self::$container[$isDebug] = RandomQueueTestContainerBuilder::getContainer($isDebug);
+        $index = (int)$isDebug;
+        if (!array_key_exists($index, self::$container)) {
+            self::$container[$index] = RandomQueueTestContainerBuilder::getContainer($index);
         }
-        return self::$container[$isDebug];
+        return self::$container[$index];
     }
 }

@@ -1,8 +1,5 @@
 <?php
-
-
 namespace RandomQueue\Event;
-
 
 use PhpAmqpLib\Message\AMQPMessage;
 use RandomQueue\Exception\JobFailedException;

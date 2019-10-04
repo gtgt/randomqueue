@@ -109,6 +109,8 @@ services:
             $connection: '@rabbitmq.connection'
             $channelName: '%rabbitmq.channel%'
 
+    RandomQueue\Queue\JobToMessageTransformer:
+        public: true
 
     RandomQueue\Command\QueueConsumerCommand:
         tags:
